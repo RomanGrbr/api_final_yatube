@@ -4,11 +4,28 @@ from django.db import models
 User = get_user_model()
 
 
+class Group(models.Model):
+    title = models.CharField('Заголовок', max_length=200)
+    slug = models.SlugField('Группа', unique=True)
+    description = models.TextField('Текст, на странице сообщества')
+
+    def __str__(self):
+        return self.slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.title
+        super().save(*args, **kwargs)
+
+
 class Post(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='posts')
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL,
+                              related_name='posts', blank=True, null=True,
+                              help_text='Выбирете группу публикации')
     image = models.ImageField(
         upload_to='posts/', null=True, blank=True)
 
@@ -24,3 +41,19 @@ class Comment(models.Model):
     text = models.TextField()
     created = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='follower'
+    )
+    following = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='following'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'], name='uniq_follow'
+            ),
+        ]
