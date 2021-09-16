@@ -10,6 +10,7 @@ router = routers.DefaultRouter()
 router.register(r'posts', PostViewSet)
 router.register(r'comments', CommentViewSet)
 router.register(r'follow', FollowViewSet)
+router.register(r'groups', FollowViewSet)
 
 urlpatterns = [
     path('v1/', include(router.urls)),
