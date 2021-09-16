@@ -59,6 +59,6 @@ class FollowViewSet(viewsets.ModelViewSet):
     serializer_class = FollowSerializer
 
 
-class GroupViewSet(viewsets.ModelViewSet):
+class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
