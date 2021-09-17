@@ -14,6 +14,14 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     pagination_class = LimitOffsetPagination
 
+    # def get_serializer_class(self):
+    #     # Если запрошенное действие (action) — получение списка объектов ('list')
+    #     if self.action == 'list':
+    #         # ...то применяем CatListSerializer
+    #         return CatListSerializer
+    #     # А если запрошенное действие — не 'list', применяем CatSerializer
+    #     return CatSerializer
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
