@@ -25,7 +25,9 @@ class PostSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
     user = serializers.SlugRelatedField(
-        slug_field="username", queryset=User.objects.all()
+        slug_field="username",
+        read_only=True,
+        default=serializers.CurrentUserDefault()
     )
     following = serializers.SlugRelatedField(
         slug_field="username", queryset=User.objects.all()
@@ -38,7 +40,8 @@ class FollowSerializer(serializers.ModelSerializer):
     validators = [
         UniqueTogetherValidator(
             queryset=Follow.objects.all(),
-            fields=['user', 'following']
+            fields=('user', 'following'),
+            message='Такая подписка уже существует'
         )
     ]
 
