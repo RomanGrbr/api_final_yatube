@@ -1,9 +1,10 @@
-from rest_framework import viewsets
-from rest_framework.exceptions import PermissionDenied
+from requests import Response
+from rest_framework import viewsets, filters, generics
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework import permissions
 
-from posts.models import Post, Comment, Follow, Group
+from posts.models import Post, Comment, Follow, Group, User
 from .serializers import PostSerializer, CommentSerializer, FollowSerializer, \
     GroupSerializer
 from rest_framework.pagination import LimitOffsetPagination
@@ -47,10 +48,32 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
 
 class FollowViewSet(viewsets.ModelViewSet):
-    queryset = Follow.objects.all()
+    # queryset = Follow.objects.all()
     serializer_class = FollowSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('following__username',)
 
-    # search_fields = ('user', 'following',)
+    def get_queryset(self):
+        new_queryset = Follow.objects.filter(user=self.request.user)
+        return new_queryset
+
+    def perform_create(self, serializer):
+        if 'following' not in self.request.data:
+            raise ValidationError('Отсутсвуют данные для подписки')
+        if self.request.user.username == self.request.data['following']:
+            raise ValidationError('Нельзя подписаться на себя')
+        following = generics.get_object_or_404(User,
+                                               username=self.request.data[
+                                                   'following'])
+        serializer.save(user=self.request.user, following=following)
+
+    # def perform_create(self, serializer):
+    #     if self.request.user.username == self.request.data['following']:
+    #         raise ValidationError('Нельзя подписаться на себя')
+    #     following = generics.get_object_or_404(User,
+    #                                            username=self.request.data[
+    #                                                'following'])
+    #     serializer.save(user=self.request.user, following=following)
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
