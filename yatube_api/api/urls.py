@@ -9,11 +9,12 @@ router.register(r'v1/posts', PostViewSet, basename='posts')
 router.register(
     r'v1/posts/(?P<id>\d+)/comments', CommentsViewSet, basename='comments'
 )
-router.register(r'v1/follow', FollowViewSet, basename='follow')
+# router.register(r'v1/follow', FollowViewSet, basename='follow')
 router.register(r'v1/groups', GroupViewSet, basename='groups')
 
 urlpatterns = [
     path('v1/auth/', include('djoser.urls')),
     path('v1/', include('djoser.urls.jwt')),
     path('', include(router.urls)),
+    path('v1/follow/', FollowViewSet.as_view()),
 ]

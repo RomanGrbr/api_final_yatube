@@ -1,32 +1,22 @@
-from rest_framework import viewsets, filters, permissions
+from rest_framework import viewsets, filters, permissions, generics
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 
-from posts.models import Post, Comment, Follow, Group
-from .serializers import PostSerializer, CommentSerializer, FollowSerializer, \
-    GroupSerializer
-from .permissions import UserOrReadOnly
+from posts.models import Post, Comment, Group
+from .serializers import (PostSerializer, CommentSerializer, FollowSerializer,
+                          GroupSerializer)
+from .permissions import UserOrReadOnly, AuthorOrReadOnly
 
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (AuthorOrReadOnly,)
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
-    def perform_update(self, serializer):
-        if serializer.instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        super().perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        if instance.author != self.request.user:
-            raise PermissionDenied('Изменение чужого контента запрещено!')
-        super().perform_destroy(instance)
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -45,15 +35,15 @@ class CommentsViewSet(viewsets.ModelViewSet):
         )
 
 
-class FollowViewSet(viewsets.ModelViewSet):
+class FollowViewSet(generics.ListCreateAPIView):
     serializer_class = FollowSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
 
     def get_queryset(self):
-        new_queryset = Follow.objects.filter(user=self.request.user)
-        return new_queryset
+        return self.request.user.follower.all()
 
+#TODO Эта проверка должна выполнятся в валидаторе
     def perform_create(self, serializer):
         if self.request.user.username == self.request.data['following']:
             raise ValidationError('Нельзя подписаться на себя')
