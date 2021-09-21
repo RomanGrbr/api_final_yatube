@@ -1,5 +1,4 @@
 from rest_framework import viewsets, filters, permissions, generics
-from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -43,10 +42,8 @@ class FollowViewSet(generics.ListCreateAPIView):
     def get_queryset(self):
         return self.request.user.follower.all()
 
-#TODO Эта проверка должна выполнятся в валидаторе
     def perform_create(self, serializer):
-        if self.request.user.username == self.request.data['following']:
-            raise ValidationError('Нельзя подписаться на себя')
+        serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)
 
 
